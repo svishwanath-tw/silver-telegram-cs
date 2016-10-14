@@ -11,6 +11,7 @@ public class MingleClient
 	private string ProjectIdentifier { get; set; }
 	private string AccessKeyId { get; set; }
 	private string SecretAccessKey { get; set; }
+	private const string CONTENT_TYPE = "application/xml";
 
 	public MingleClient(string hostUrl, string projectIdentifier, string accessKeyId, string secretAccessKey)
 	{
@@ -60,14 +61,13 @@ public class MingleClient
 
 	private void Sign(HttpWebRequest request)
 	{
-		const string contentType = "application/xml";
 		var formattedDate = DateTime.Now.ToString("r");
 		var contentMd5 = CalculateMd5Hash(string.Empty); //This is for get request. For post, you will need to send request.Body to calculateMd5Hash()
 		var requestPath = request.RequestUri.AbsolutePath;
-		var canonicalString = string.Format("{0},{1},{2},{3}", contentType, contentMd5, requestPath, formattedDate);
+		var canonicalString = string.Format("{0},{1},{2},{3}", CONTENT_TYPE, contentMd5, requestPath, formattedDate);
 		var hmacSignature = CalculateHmac(canonicalString);
 
-		request.ContentType = contentType;
+		request.ContentType = CONTENT_TYPE;
 		var privateMethodWorkaroundForDate = request.Headers.GetType().GetMethod("AddWithoutValidate", BindingFlags.Instance | BindingFlags.NonPublic);
 		privateMethodWorkaroundForDate.Invoke(request.Headers, new[] { "Date", formattedDate });
 		request.Headers["Content-MD5"] = contentMd5;
